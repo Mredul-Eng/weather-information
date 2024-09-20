@@ -1,5 +1,5 @@
 public class WeatherData {
-    private String sourceId; // content server id that provide data
+    private String sourceId; // content server id(source) that provide data
     private String info; // current weather information
     private int lamportTime; // that time when the data was received
 
