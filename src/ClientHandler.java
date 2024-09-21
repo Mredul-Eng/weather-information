@@ -26,12 +26,11 @@ public class ClientHandler implements Runnable{
             assert request != null;
             String[] requestParts = request.split(" "); //split the request line into parts based on white space and extract the HTTP methods(GET or PUT).
             String method = requestParts[0]; // Get or Put
-            String path = requestParts[1]; //The requested source
 
             if ("GET".equalsIgnoreCase(method)) {
-                AggregationServer.handleGetRequest(out, path); // send data to the client
+                AggregationServer.handleGetRequest(out); // send data to the client
             } else if ("PUT".equalsIgnoreCase(method)) {
-                AggregationServer.handlePutRequest(in, out, path); //retrieve client's data and after updating send the data to client
+                AggregationServer.handlePutRequest(in, out); //retrieve client's data and after updating send the data to client
             } else {
                 out.println("HTTP/1.1 400 Bad Request");
             }
