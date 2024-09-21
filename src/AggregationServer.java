@@ -9,14 +9,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
 
 //This class mainly responsible for running the server and handling client's request
 public class AggregationServer {
 
     //Constant
-    private static final int DEFAULT_PORT = 4531; //the server will start in 4531 port by default
+    private static final int DEFAULT_PORT = 4567; //the server will start in 4531 port by default
     private static final Long TIMEOUT = 30000L; // content servers will expire if they didn't communicate within 30 seconds.
     private static final int MAX_ENTRIES = 20; // maximum number of weather data (entries) to be stored
     private static final String FILENAME = "weather-data.txt";
@@ -28,9 +26,9 @@ public class AggregationServer {
 
     public static void main(String[] args) {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
-       AggregationServer server = new AggregationServer();
-       server.loadDataFromFile();
-       server.start(port);
+        AggregationServer server = new AggregationServer();
+        server.loadDataFromFile();
+        server.start(port);
     }
     //load weather data from the file
     private void loadDataFromFile() {
@@ -56,7 +54,7 @@ public class AggregationServer {
         out.println(serializeToJSON()); //convert weather data to JSON format
 
     }
-   //this method update the weather data based on client's PUT request
+    //this method update the weather data based on client's PUT request
     public static void handlePutRequest(BufferedReader in, PrintWriter out) throws IOException {
         lamportClock.incrementTime();//update the Lamport clock on PUT request
 
@@ -75,9 +73,7 @@ public class AggregationServer {
             if(storeWeatherData.size() > MAX_ENTRIES){
                 removeOldWeatherData();
             }
-            else{
-                out.println("HTTP/1.1 200 OK");
-            }
+            out.println("HTTP/1.1 200 OK");
             saveDataToFile();
         }
         else{
@@ -112,7 +108,7 @@ public class AggregationServer {
         try{
             Gson gson = new Gson();
             return gson.fromJson(jsonData, WeatherData.class); //convert JSON string to weather data
-        }catch(JsonSyntaxException e){
+        }catch(Exception e){
             System.out.println("Failed to parse JSON");
             return null;
         }
@@ -131,7 +127,7 @@ public class AggregationServer {
             //remove expired data in every 30 second
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
             executorService.scheduleAtFixedRate(this::removeExpiredData, 30, 30, TimeUnit.SECONDS);
-            
+
             while(true){
                 try{
                     Socket clientSocket = serverSocket.accept(); // receive server socket connection in client socket

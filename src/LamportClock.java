@@ -22,11 +22,6 @@ public class LamportClock {
         // The method should be synchronized for handling multiple client.
     }
 
-   //This method first increment the time before sending process and then return the current time.
-    public int send(){
-        incrementTime();
-        return time;
-    }
    //This method return the current time.The method should be synchronized for handling multiple client.
     public synchronized int getTime() {
         return time;
