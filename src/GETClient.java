@@ -18,8 +18,8 @@ public class GETClient {
             return;
         }
         try{
-            String serverURL = args[0]; // extract first command line arguments
-            String stationId = (args.length > 1) ? args[1] : null; // extract the stationId if there is available second command line
+            String serverURL =  args[0]; // extract first command line arguments
+            String stationId = (args.length > 2) ? args[1] : null; // extract the stationId if there is available second command line
 
             URL url = parseServerURL(serverURL);
             String hostName = url.getHost(); // extract host name from the URL
@@ -42,7 +42,7 @@ public class GETClient {
             {
                 //Form a valid HTTP GET request and send it to the server
                 out.println("GET" + path + "HTTP/1.1"); //specify the HTTP method(GET) and the URL path of the resource.
-                out.println("Host: " + hostName); // specify the IP address or domain of the server
+                out.println("Host: " + hostName + ":" + port); // specify the IP address or domain of the server
                 out.println("User-Agent: WeatherGETClient/1.0"); //specify the client that send request
                 out.println("Lamport-Clock: " + lamportClock.getTime());//sending a custom header that includes current time of lamport clock
                 // and keep track of the logical time for the system.

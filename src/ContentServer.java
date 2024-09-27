@@ -4,7 +4,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ContentServer {
@@ -12,56 +13,61 @@ public class ContentServer {
 
     public static void main(String[] args) {
         //check if necessary command line is provided or not. If not, then print a message by giving usage instruction and exits.
-        if(args.length < 2){
-            System.out.println("Usages: java ContentServer <serverURL> [stationId]");
+        if(args.length  < 2){
+            System.out.println("The command to run the ContentServer should be:" +
+                    " java ContentServer <serverURL>");
             return;
         }
-        String serverURL = args[0];
-        String filePath = args[1]; // path to the file that containing weather data
-        System.out.println(filePath);
+        String urlString = args[0];
+        String filePath = args[1];
 
         try{
-            URL url = parseServerURL(serverURL);
+            URL url = parseServerURL(urlString);
             String hostName = url.getHost(); // extract host name from the URL
             int port = (url.getPort() != -1) ? url.getPort() : 80;
-            Map<String, String> data = readFile(filePath); // load weather data from the local file
-            String jsonData = convertToJSON(data);
-
             //send the weather data to the Aggregation Server through PUT request
-            sendPutRequest(hostName,port,jsonData);
+            sendPutRequest(hostName,port,filePath);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-    }
 
-    private static void sendPutRequest(String hostName, int port, String jsonData) throws IOException {
+    }
+    private static void sendPutRequest(String hostName, int port, String filePath) throws IOException {
+        // Read weather data from the file
+        Map<String, String> weatherData = readFile(filePath);
+        System.out.println("Data after reading the file " + weatherData);
+
+        // Convert weather data to JSON
+        String jsonData = convertToJSON(weatherData);
+        System.out.println("Convert the weather data to JSON " + jsonData);
         try(Socket socket = new Socket(hostName,port);//open network connection to specified hostName and port
-            PrintWriter out = new PrintWriter(socket.getOutputStream()); // client send request to the server
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())); // client receive data from the server
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(),"UTF-8")); // send HTTP Put request and data to the server
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8)); // send HTTP Put request and data to the server
         ){
             // increase the lamport clock's time before sending the PUT request
             lamportClock.incrementTime();
 
-            //prepare HTTP PUT request's header
+           // prepare HTTP PUT request's header
             String path = "/weather.json";
-            String userAgent = "ATOMClient/1/0";
+            String userAgent = "ATOMClient/1.0";
             String contentType = "application/json";
-            int contentLength = jsonData.getBytes("UTF-8").length; // calculate the length of jsonData body
+            int contentLength = jsonData.length();
 
-            //create the PUT request with specified header
+
+            // Send the PUT request
             writer.write("PUT " + path + " HTTP/1.1\r\n");
-            writer.write("Host: " + hostName + "\r\n");
+            writer.write("Host: " + hostName + ":" + port + "\r\n");
             writer.write("User-Agent: " + userAgent + "\r\n");
             writer.write("Content-Type: " + contentType + "\r\n");
             writer.write("Content-Length: " + contentLength + "\r\n");
-            writer.write("\r\n");
-            writer.write(jsonData); // write actual weather data in JSON format which is sent to the body of the PUT request.
+            writer.write("Connection: close\r\n"); // Close connection after request
+            writer.write("\r\n"); // End of headers, beginning of body
+            writer.write(jsonData); // Write JSON body
             writer.flush();
 
             String responseLine;
-            if((responseLine = in.readLine())!= null){
+            while((responseLine = in.readLine())!= null){
                 System.out.println(responseLine); // read the response line one by one and print them to showing the client server's response.
             }
         }
@@ -74,10 +80,9 @@ public class ContentServer {
         return gson.toJson(weatherData);
 
     }
-
     //read the local file line by line and split each line into key-value pairs
     private static Map<String, String> readFile(String filePath) throws FileNotFoundException {
-        Map<String, String> weatherData = new HashMap<>(); // store weather data from the local file
+        Map<String, String> weatherData = new LinkedHashMap<>(); // store weather data from the local file
         //read the file line by line
         try(BufferedReader reader = new BufferedReader(new FileReader(filePath))){
             String line;

@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -17,33 +18,36 @@ public class AggregationServer {
     private static final int DEFAULT_PORT = 4567; //the server will start in 4531 port by default
     private static final Long TIMEOUT = 30000L; // content servers will expire if they didn't communicate within 30 seconds.
     private static final int MAX_ENTRIES = 20; // maximum number of weather data (entries) to be stored
-    private static final String FILENAME = "weather-data.txt";
+    private static final String FILENAME = "D:\\Users\\Microservices\\Weather_Information\\weather-data.json";
 
-    //Variables that store and track weather data
+    //Maps that store and track weather data
     private static final Map<String, WeatherData> storeWeatherData = new ConcurrentHashMap<>(); // Stores weather data.
     private static final Map<String, Long> lastSeenContentServers = new ConcurrentHashMap<>(); // track last communication time for each content servers to remove old data
     private static final LamportClock lamportClock = new LamportClock(); // implement a lamport clock to track the local time
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
         AggregationServer server = new AggregationServer();
-        server.loadDataFromFile();
+        //readFile(FILENAME);
         server.start(port);
     }
-    //load weather data from the file
-    private void loadDataFromFile() {
-        //read the file with the help of FileReader and BufferedReader
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILENAME))) {
-            String line;
-            if((line = reader.readLine()) != null){
-                WeatherData weatherData = parseWeatherDataFromJSON(line); //parse weather data from JSON line by line.
-                storeWeatherData.put(weatherData.getSourceId(), weatherData); //Restore weather data into map
-                lastSeenContentServers.put(weatherData.getSourceId(), System.currentTimeMillis()); // Restore timestamps
-            }
-        } catch (IOException e) {
-            System.out.println("Error to load data from the file: " + e.getMessage());
-        }
-    }
+//
+//    private static void readFile(String filePath) throws FileNotFoundException {
+//        Map<String, String> weatherData = new LinkedHashMap<>(); // store weather data from the local file
+//        //read the file line by line
+//        try(BufferedReader reader = new BufferedReader(new FileReader(filePath))){
+//            String line;
+//            while((line = reader.readLine()) != null){
+//                String[] keyValue = line.split(":", 2);
+//                if(keyValue.length == 2){
+//                    weatherData.put(keyValue[0].trim(), keyValue[1].trim()); //after ensuring that the line is split correctly into two parts
+//                }
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
+
 
     //This method send appropriate data to the client
     public static void handleGetRequest(PrintWriter out) {
@@ -51,30 +55,45 @@ public class AggregationServer {
         out.println("HTTP/1.1 200 OK");
         out.println("Content-Type:application/json");
         out.println();
-        out.println(serializeToJSON()); //convert weather data to JSON format
+        for(WeatherData weatherData : storeWeatherData.values()) {
+            out.println(serializeToJSON(weatherData)); //convert weather data to JSON format
+        }
+//        out.println("HTTP/1.1 200 OK");
+//        out.println("Content-Type:application/json");
+//        out.println();
+
 
     }
     //this method update the weather data based on client's PUT request
     public static void handlePutRequest(BufferedReader in, PrintWriter out) throws IOException {
         lamportClock.incrementTime();//update the Lamport clock on PUT request
-
         StringBuilder jsonContent = new StringBuilder();
         String line;
-        //this loop reads data (the data should be in JSON format) line by line which is sent by client
+        int contentLength = 0;
+        //this loop reads header line by line which is sent by client
         while((line = in.readLine()) != null && !line.isEmpty()){
-            jsonContent.append(line); // continuously update each line of text of client's request data
+            if(line.startsWith("Content-Length:")){
+                contentLength = Integer.parseInt(line.split(":")[1].trim()); // extract the Content-Length value from header and convert it to integer.
+            }
+        }
+
+        if(contentLength > 0){
+            char[] contentBody = new char[contentLength];
+            int bytesRead = in.read(contentBody, 0, contentLength); // read content-length's number of characters.The content-body mainly contain the JSON content in byte[] array format
+            if (bytesRead > 0) {
+                jsonContent.append(contentBody, 0, bytesRead); // append the actual content (not the number of bytes read)
+            }
         }
         WeatherData weatherData = parseWeatherDataFromJSON(jsonContent.toString());// convert the json texts to string
         // and pass the data to parseWeatherDataFromJSON method to convert json data to weatherData object
-
         if(weatherData != null){ //if the json data successfully converted to weather data
-            storeWeatherData.put(weatherData.getSourceId(), weatherData); //add or update the weather data in storeWeatherData map
-            lastSeenContentServers.put(weatherData.getSourceId(), System.currentTimeMillis()); //track the last time of a specific content server that send data.
+            storeWeatherData.put(weatherData.getId(), weatherData); //add or update the weather data in storeWeatherData map
+            lastSeenContentServers.put(weatherData.getId(), System.currentTimeMillis()); //track the last time of a specific content server that send data.
             if(storeWeatherData.size() > MAX_ENTRIES){
                 removeOldWeatherData();
             }
             out.println("HTTP/1.1 200 OK");
-            saveDataToFile();
+            saveDataToFile(storeWeatherData);
         }
         else{
             out.println("HTTP/1.1 500 Internal Server Error");
@@ -82,14 +101,23 @@ public class AggregationServer {
 
     }
 
-    private static void saveDataToFile() {
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME, true))) {
-            for(WeatherData data : storeWeatherData.values()){
-                writer.write(data.toString()); // convert each weather data to JSON string and write in the file.
-                writer.newLine();
+    private static void saveDataToFile(Map<String, WeatherData> storeWeatherData) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILENAME))) {
+            // Print the data to be saved to the console for debugging
+            if (storeWeatherData.isEmpty()) {
+                System.out.println("No data to save, storeWeatherData is empty.");
+            } else {
+                System.out.println("Saving the following data to the file:");
+                System.out.println(storeWeatherData);
+            }
+
+            // Save the data to the file
+            for (WeatherData data : storeWeatherData.values()) {
+                writer.write(serializeToJSON(data));
+                writer.flush(); // Ensure all data is flushed and written to the file
             }
         } catch (IOException e) {
-            System.out.println("Error to write or save data to file: " + e.getMessage());
+            System.out.println("Error writing or saving data to the file: " + e.getMessage());
         }
     }
 
@@ -114,9 +142,9 @@ public class AggregationServer {
         }
     }
 
-    private static String serializeToJSON() {
+    private static String serializeToJSON(WeatherData weatherData) {
         Gson gson = new Gson();
-        return gson.toJson(storeWeatherData.values()); // convert weather data to JSON string.
+        return gson.toJson(weatherData); // convert weather data to JSON string.
     }
 
     private void start(int port) {
@@ -150,7 +178,7 @@ public class AggregationServer {
             }
             return false;
         });
-        saveDataToFile(); // ensure data will be written in file up to date
+        saveDataToFile(storeWeatherData); // ensure data will be written in file up to date
     }
 }
 

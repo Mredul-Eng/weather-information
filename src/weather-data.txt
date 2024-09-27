@@ -1,17 +1,35 @@
-id: 001
-name: Weather Station 1
-state: Active
-time_zone: PST
-lat: 34.0522
-lon: -118.2437
-local_date_time: 2023-09-21T10:30:00
-local_date_time_full: 20230921T103000Z
-air_temp: 27.5
-apparent_t: 30.2
-cloud: Clear
-dewpt: 10.3
-press: 1015
-rel_hum: 40
-wind_dir: N
-wind_spd_kmh: 15
-wind_spd_kt: 8
+id:IDS60901
+name:Adelaide (West Terrace / ngayirdapira)
+state: SA
+time_zone:CST
+lat:-34.9
+lon:138.6
+local_date_time:15/04:00pm
+local_date_time_full:20230715160000
+air_temp:13.3
+apparent_t:9.5
+cloud:Partly cloudy
+dewpt:5.7
+press:1023.9
+rel_hum:60
+wind_dir:S
+wind_spd_kmh:15
+wind_spd_kt:8
+
+id:IDS6092018
+name:South Australia (West Terrace / ngayirdapira)
+state: SA
+time_zone:CST
+lat:-34.9
+lon:138.6
+local_date_time:15/04:00pm
+local_date_time_full:20230715160000
+air_temp:13.3
+apparent_t:9.5
+cloud:Partly cloudy
+dewpt:5.7
+press:1023.9
+rel_hum:60
+wind_dir:S
+wind_spd_kmh:15
+wind_spd_kt:8

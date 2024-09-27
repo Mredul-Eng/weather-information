@@ -1,5 +1,5 @@
 public class WeatherData {
-    private final String sourceId; // content server id(source) that provide data
+    private final String id; // content server id(source) that provide data
     private final String name;
     private final String state;
     private final String time_zone;
@@ -18,8 +18,8 @@ public class WeatherData {
     private final int wind_spd_kt;
 
 
-    public WeatherData(String sourceId, String name, String state, String time_zone, double lat, double lon, String local_date_time, String local_date_time_full, double air_temp, double apparent_t, String cloud, double dewpt, double press, int rel_hum, String wind_dir, int wind_spd_kmh, int wind_spd_kt) {
-        this.sourceId = sourceId;
+    public WeatherData(String id, String name, String state, String time_zone, double lat, double lon, String local_date_time, String local_date_time_full, double air_temp, double apparent_t, String cloud, double dewpt, double press, int rel_hum, String wind_dir, int wind_spd_kmh, int wind_spd_kt) {
+        this.id = id;
         this.name = name;
         this.state = state;
         this.time_zone = time_zone;
@@ -37,15 +37,15 @@ public class WeatherData {
         this.wind_spd_kmh = wind_spd_kmh;
         this.wind_spd_kt = wind_spd_kt;
     }
-    public String getSourceId() {
-        return sourceId;
+    public String getId() {
+        return id;
     }
 
     //print weather data in JSON format
     @Override
     public String toString() {
-        return
-                "id='" + sourceId + '\'' +
+        return "{" +
+                "id='" + id + '\'' +
                 ", name='" + name + '\'' +
                 ", state='" + state + '\'' +
                 ", time_zone='" + time_zone + '\'' +
