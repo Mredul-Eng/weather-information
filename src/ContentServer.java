@@ -14,7 +14,7 @@ public class ContentServer {
     public static void main(String[] args) {
         //check if necessary command line is provided or not. If not, then print a message by giving usage instruction and exits.
         if(args.length  < 2){
-            System.out.println("The command to run the ContentServer should be:" +
+            System.out.println("Usages:" +
                     " java ContentServer <serverURL>");
             return;
         }
@@ -75,17 +75,18 @@ public class ContentServer {
 
 
     //this method convert the weather data map to JSON
-    private static String convertToJSON(Map<String, String> weatherData) {
+    public static String convertToJSON(Map<String, String> weatherData) {
         Gson gson = new Gson();
         return gson.toJson(weatherData);
 
     }
     //read the local file line by line and split each line into key-value pairs
-    private static Map<String, String> readFile(String filePath) throws FileNotFoundException {
+    public static Map<String, String> readFile(String filePath) {
         Map<String, String> weatherData = new LinkedHashMap<>(); // store weather data from the local file
         //read the file line by line
         try(BufferedReader reader = new BufferedReader(new FileReader(filePath))){
             String line;
+            boolean fileEmpty = false;
             while((line = reader.readLine()) != null){
                 String[] keyValue = line.split(":", 2); // each line from the file is written in key:value format
                 // and the spilt method split each line(string) into two parts based on ":". After splitting the string, stored the results in the keyValue array.
@@ -93,6 +94,10 @@ public class ContentServer {
                     weatherData.put(keyValue[0].trim(), keyValue[1].trim()); //after ensuring that the line is split correctly into two parts
                     // and add the key-value pair into the weatherData map and remove extra spaces using trim() method.
                     // Here, keyValue[0] = key and keyValue[1] = value
+                    fileEmpty = true;
+                }
+                if(!fileEmpty){
+                    System.out.println("No data found in "+filePath);
                 }
             }
         } catch (IOException e) {

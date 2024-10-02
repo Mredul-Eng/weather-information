@@ -1,0 +1,5 @@
+id:IDS60901
+name:Adelaide
+state: SA
+time_zone:CST
+cloud:Partly cloudy

@@ -1,11 +1,14 @@
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.URL;
+import java.util.List;
 
 //This class is designed to send GET request to the AggregationServer and get response (weather data) in JSON format
 public class GETClient {
@@ -19,7 +22,7 @@ public class GETClient {
         }
         try{
             String serverURL =  args[0]; // extract first command line arguments
-            String stationId = (args.length > 2) ? args[1] : null; // extract the stationId if there is available second command line
+            String stationId = (args.length > 1) ? args[1] : null; // extract the stationId if there is available second command line
 
             URL url = parseServerURL(serverURL);
             String hostName = url.getHost(); // extract host name from the URL
@@ -41,13 +44,14 @@ public class GETClient {
             )
             {
                 //Form a valid HTTP GET request and send it to the server
-                out.println("GET" + path + "HTTP/1.1"); //specify the HTTP method(GET) and the URL path of the resource.
+                out.println("GET " + path + " HTTP/1.1"); //specify the HTTP method(GET) and the URL path of the resource.
                 out.println("Host: " + hostName + ":" + port); // specify the IP address or domain of the server
                 out.println("User-Agent: WeatherGETClient/1.0"); //specify the client that send request
                 out.println("Lamport-Clock: " + lamportClock.getTime());//sending a custom header that includes current time of lamport clock
                 // and keep track of the logical time for the system.
                 out.println("Connection: close"); // close the connection after sending the response
                 out.println(); // marks the end of the HTTP request headers.
+                out.flush();
 
                 //Read and display the server response
                 String responseLine;
@@ -64,11 +68,11 @@ public class GETClient {
                         jsonStarted = true; // if responseLine is empty, then JSON starts after request header.
                     }
                 }
-                // increase the lamport clock's time after receiving response
+                //increase the lamport clock's time after receiving response
                 lamportClock.incrementTime();
 
                 //displaying the weather data
-                if(!jsonResponse.isEmpty()){
+                if(jsonResponse.length() > 0){
                     displayWeatherData(jsonResponse.toString());
                 }
                 else {
@@ -85,9 +89,17 @@ public class GETClient {
 
     private static void displayWeatherData(String json) {
         Gson gson = new Gson();
-        //parse JSON into weather data object
-        WeatherData weatherData = gson.fromJson(json, WeatherData.class);
-        System.out.println(weatherData.toString()); // print the weather data in JSON format
+        //identify the correct type of weatherData lists
+        Type weatherDataList = new TypeToken<List<WeatherData>>() {}.getType();
+        //parse JSON array into the list of weather data objects
+        List<WeatherData> weatherList = gson.fromJson(json, weatherDataList);
+
+        if(!weatherList.isEmpty()){
+            for(WeatherData weatherData : weatherList){
+                System.out.println(weatherData.toString()); // print the weather data in JSON format
+            }
+        }
+
     }
 
     // this method return correctly formatted server URL.

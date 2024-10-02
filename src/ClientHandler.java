@@ -20,17 +20,10 @@ public class ClientHandler implements Runnable{
              PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
             String requestLine = in.readLine(); // read HTTP request from the client
-            System.out.println(requestLine);
             if (requestLine == null) {
                 out.println("HTTP/1.1 204 Request Not Found");
             }
             else{
-//                String [] request = requestLine.split(" ");
-//                if(request[0].equalsIgnoreCase("GET")){
-//                    AggregationServer.handleGetRequest(out);
-//                } else if (request[0].equalsIgnoreCase("PUT")) {
-//                    AggregationServer.handlePutRequest(in, out);
-//                }
                 if(requestLine.startsWith("GET")){
                     AggregationServer.handleGetRequest(out);
                 }
