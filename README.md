@@ -90,17 +90,20 @@ The integration tests are designed to check the function of the following compon
 To run the aggregation server, execute:
 ```bash
 java -cp ".;gson-2.10.jar" AggregationServer
+```
 
 ### Start the Content Server
 To run the content server, execute:
 ```bash
 java -cp ".;gson-2.10.jar" ContentServer http://localhost:4567 weather-data.txt
+```
 
 ### Start the Client
 To run the client, execute:
 ```bash
-java -cp ".;gson-2.10.jar" GETClient http://localhost:4567 
+java -cp ".;gson-2.10.jar" GETClient http://localhost:4567
+```
  
-To know more details, please visit the repository (https://github.com/yourusername/weather-aggregation-system)
+To know more details, please visit the repository (https://github.com/Mredul-Eng/weather-information.git)
 
 
