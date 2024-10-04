@@ -7,10 +7,10 @@ This project implements a distributed weather aggregation system that allows cli
 - [System Components](#system-components)
 - [Lamport Clock Synchronization](#lamport-clock-synchronization)
 - [Features](#features)
-- [Running the System](#running-the-system)
 - [Testing](#testing) 
-- [Unit Testing](#unit-testing)
-- [Integration Testing](#integration-testing)
+  - [Unit Testing](#unit-testing)
+  - [Integration Testing](#integration-testing)
+- [Running the System](#running-the-system)
 
 ## Overview
 
@@ -51,23 +51,6 @@ Lamport clocks ensure that all operations (PUT and GET) are ordered consistently
 - **Persistent Storage**: The aggregation server stores weather data until it is removed due to expiration.
 - **Lamport Clocks**: Synchronizes events across distributed servers and clients.
 
-## Running the System
-
-### Start the Aggregation Server
-To run the aggregation server, execute:
-```bash
-java -cp ".;gson-2.10.jar" AggregationServer
-
-### Start the Content Server
-To run the content server, execute:
-```bash
-java -cp ".;gson-2.10.jar" ContentServer http://localhost:4567 weather-data.txt
-
-### Start the Client
-To run the client, execute:
-```bash
-java -cp ".;gson-2.10.jar" GETClient http://localhost:4567 
-
 ## Testing
 
 The Weather Aggregation System has been tested using unit tests for individual components and integration tests to verify interactions between the aggregation server, content servers, and clients. The tests cover:
@@ -99,7 +82,24 @@ The integration tests are designed to check the function of the following compon
 
  3. **Data Expiry After Server Failure**: 
  - Tests the scenario where a content server stops sending updates for over 30 seconds.
- - Confirms that the aggregation server correctly removes the outdated data from that content server. 
+ - Confirms that the aggregation server correctly removes the outdated data from that content server.
+
+## Running the System
+
+### Start the Aggregation Server
+To run the aggregation server, execute:
+```bash
+java -cp ".;gson-2.10.jar" AggregationServer
+
+### Start the Content Server
+To run the content server, execute:
+```bash
+java -cp ".;gson-2.10.jar" ContentServer http://localhost:4567 weather-data.txt
+
+### Start the Client
+To run the client, execute:
+```bash
+java -cp ".;gson-2.10.jar" GETClient http://localhost:4567 
  
 To know more details, please visit the repository (https://github.com/yourusername/weather-aggregation-system)
 
